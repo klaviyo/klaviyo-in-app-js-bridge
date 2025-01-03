@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klaviyo In-App Form Test</title>
+    <script type="text/javascript" src="./bridge.js"></script>
+    <script type="application/javascript">
+        // Log all bridge messages back to console (for testing outside SDK test apps)
+        window['KlaviyoBrowserMessageHandler'] = {
+            postMessage: function () {
+                console.debug("postMessage", arguments)
+            }
+        }
+
+        // Initialize the klaviyo bridge JS object
+        initKlaviyoBridge(JSON.stringify({
+            messageHandlerName: KlaviyoBrowserMessageHandler,
+            klaviyoJsUrl: "http://local-klaviyo.com:8080/onsite/js/klaviyo.js",
+            companyId: "KLAVIYO_PUBLIC_KEY_PLACEHOLDER",
+        }));
+    </script>
+</head>
+<body></body>
+</html>
