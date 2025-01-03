@@ -6,6 +6,10 @@
  *  - Optional chaining
  *  - Spread operator
  *
+ * However! not everything in ECMA Script 6 is verboten, for example the following should be safe:
+ *  - const keyword
+ *  - Arrow functions
+ *
  * Inject this script file from native code into the head of the HTML document.
  * Format string like this, where strWrapperScript is the contents of this file
  * and strJsonOpts is the json-encoded handoff parameters detailed below
@@ -44,8 +48,17 @@ function initKlaviyoBridge(strJsonOpts) {
     // Makes the bridge object available as a global variable
     window['KlaviyoBridge'] = klaviyoBridge
 
-    // Initialize in-app forms
-    klaviyoBridge.initializeInAppForms()
+    if (/complete|interactive|loaded/.test(document.readyState)) {
+        // In case the document has finished parsing, document's readyState will
+        // be one of "complete", "interactive" or (non-standard) "loaded".
+        klaviyoBridge.initializeInAppForms()
+    } else {
+        // The document is not ready yet, so wait for the DOMContentLoaded event
+        // https://developer.mozilla.org/en-US/docs/Web/API/Document/DOMContentLoaded_event
+        document.addEventListener('DOMContentLoaded', function () {
+            klaviyoBridge.initializeInAppForms()
+        }, false);
+    }
 
     /**
      * Bridge object to handle communication between JavaScript and Native
@@ -65,12 +78,18 @@ function initKlaviyoBridge(strJsonOpts) {
             opts: opts,
 
             initializeInAppForms: function initializeInAppForms() {
+                const self = this
                 loadKlaviyoJs(opts.klaviyoJsUrl, opts.companyId)
 
                 // Once klaviyo.js has loaded, this event is broadcast on the window
-                window.addEventListener('inAppFormsInitMessage', this.initializeMessageBus, {
-                    once: true
-                });
+                window.addEventListener(
+                    'inAppFormsInitMessage',
+                    function (event) {
+                        self.initializeMessageBus(event)
+                        self.postMessage("documentReady", {})
+                    },
+                    {once: true}
+                );
             },
 
             initializeMessageBus: function initializeMessageBus(event) {
@@ -112,10 +131,11 @@ function initKlaviyoBridge(strJsonOpts) {
             postMessage: function postMessage(type, data) {
                 try {
                     const messageHandler = this.getMessageHandler()
-                    messageHandler.postMessage({
+                    const message = JSON.stringify({
                         type: type || this.opts.defaultMessageAction,
                         data: data || {}
-                    });
+                    })
+                    messageHandler.postMessage(message);
                 } catch (e) {
                     unlinkConsole()
                     console.error(e)
