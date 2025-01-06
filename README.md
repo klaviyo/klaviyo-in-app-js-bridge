@@ -20,4 +20,4 @@ Any IDE that supports web dev will do, since you just need HTML/JS support.
 
 ## How
 We'll add this repo as a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to each SDK repository.
-When this repo is updated, each SDK will need to pull the latest changes. We can add automatations to ease the process. 
+When this repo is updated, each SDK will need to pull the latest changes. We can add automations to ease the process. 
